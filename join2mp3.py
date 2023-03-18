@@ -3,18 +3,12 @@ import os
 import argparse
 import glob
 from tqdm import tqdm
-from pydub import AudioSegment
+import subprocess
 
 def joinmp3(file1, file2, output_file):
-    # Load the two MP3 files using Pydub
-    sound1 = AudioSegment.from_mp3(file1)
-    sound2 = AudioSegment.from_mp3(file2)
-
-    # Concatenate the two MP3 files
-    combined_sound = sound1 + sound2
-
-    # Export the combined sound to the output file
-    combined_sound.export(output_file, format="mp3")
+    # Use ffmpeg to concatenate the two input MP3 files
+    cmd = f"ffmpeg -i {file1} -i {file2} -filter_complex '[0:0][1:0]concat=n=2:v=0:a=1[out]' -map '[out]' {output_file}"
+    subprocess.run(cmd, shell=True, check=True)
 
 def join_all_mp3(input_files, output_file):
     # If input_files is a directory path, get all MP3 files in the directory
