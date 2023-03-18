@@ -4,18 +4,36 @@ import sys
 from pydub import AudioSegment
 
 # Define the command-line arguments
-parser = argparse.ArgumentParser(description='Join two MP3 files')
-parser.add_argument('file1', metavar='file1', type=str,
+parser = argparse.ArgumentParser(description='Join two MP3 files',add_help=False)##argparse.ArgumentParser(add_help=False)
+parser.add_argument('file1', metavar='file1', type=str, nargs='?',
                     help='Path of the first MP3 file to join. Use "-" for stdin.')
-parser.add_argument('file2', metavar='file2', type=str,
+parser.add_argument('file2', metavar='file2', type=str, nargs='?',
                     help='Path of the second MP3 file to join')
-parser.add_argument('output', metavar='output', type=str,
+parser.add_argument('output', metavar='output', type=str, nargs='?',
                     help='Path and name of the output MP3 file. Use "-" for stdout.')
 parser.add_argument('--delete', action='store_true',
                     help='Delete the original MP3 files after combining them')
+parser.add_argument('--help', action='help', default=argparse.SUPPRESS,
+                    help='Show this help message and exit')
+
+# Set a custom help message
+parser._optionals.title = "Options"
+parser._positionals.title = "Arguments"
+parser._positionals.description = "positional arguments:"
+parser._optionals.description = "optional arguments:"
+parser._positionals.help = "    file1: Path of the first MP3 file to join. Use '-' for stdin.\n\
+    file2: Path of the second MP3 file to join.\n\
+    output: Path and name of the output MP3 file. Use '-' for stdout."
+parser._optionals.help = "    -h, --help: Show this help message and exit.\n\
+    --delete: Delete the original MP3 files after combining them."
 
 # Parse the command-line arguments
 args = parser.parse_args()
+
+# If no arguments are given, show help
+if not any(vars(args).values()):
+    parser.print_help()
+    sys.exit()
 
 try:
     # Load the first MP3 file from stdin or from file
