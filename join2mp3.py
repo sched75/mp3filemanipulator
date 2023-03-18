@@ -2,6 +2,7 @@
 import os
 import argparse
 import glob
+from tqdm import tqdm
 from pydub import AudioSegment
 
 def joinmp3(file1, file2, output_file):
@@ -30,11 +31,14 @@ def join_all_mp3(input_files, output_file):
     mp3_files.sort()
 
     # Join the MP3 files using the joinmp3 function
-    for i, file in enumerate(mp3_files):
-        if i == 0:
-            joinmp3(file, file, output_file)
-        else:
-            joinmp3(output_file, file, output_file)
+    with tqdm(total=len(mp3_files)-1, desc="Joining MP3 files", unit="file") as pbar:
+        for i, file in enumerate(mp3_files):
+            if i == 0:
+                joinmp3(file, file, output_file)
+            else:
+                joinmp3(output_file, file, output_file)
+            pbar.update(1)
+
 
 def main():
     # Parse the command line arguments
