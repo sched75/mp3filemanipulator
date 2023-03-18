@@ -45,7 +45,16 @@ def main():
     parser = argparse.ArgumentParser(description="Join multiple MP3 files into a single file")
     parser.add_argument("input_file", nargs="+", help="Path to directory or list of MP3 files to join")
     parser.add_argument("output_file", help="Path to output file")
+    parser.add_argument("-y", "--yes", action="store_true", help="Force overwrite output file without confirmation")
     args = parser.parse_args()
+
+    # Check if the output file exists
+    if os.path.exists(args.output_file) and not args.yes:
+        # If the output file exists and --yes option is not provided, ask for confirmation before overwriting it
+        overwrite = input("The output file already exists. Do you want to overwrite it? (y/n): ")
+        if overwrite.lower() != "y":
+            print("Aborting.")
+            return
 
     # Call the join_all_mp3 function with the input and output files
     if len(args.input_file) == 1 and os.path.isdir(args.input_file[0]):
