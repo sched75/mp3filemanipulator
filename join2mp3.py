@@ -1,5 +1,7 @@
 
 import os
+import argparse
+import glob
 from pydub import AudioSegment
 
 def joinmp3(file1, file2, output_file):
@@ -15,10 +17,14 @@ def joinmp3(file1, file2, output_file):
 
 def join_all_mp3(input_files, output_file):
     # If input_files is a directory path, get all MP3 files in the directory
-    if os.path.isdir(input_files):
-        mp3_files = [os.path.join(input_files, f) for f in os.listdir(input_files) if f.endswith(".mp3")]
+    if isinstance(input_files, str):
+        # If the input contains wildcards, use glob to get matching files
+        if "*" in input_files or "?" in input_files:
+            mp3_files = sorted(glob.glob(input_files))
+        else:
+            mp3_files = [os.path.join(input_files, f) for f in os.listdir(input_files) if f.endswith(".mp3")]
     else:
-        mp3_files = [f for f in input_files if f.endswith(".mp3")]
+        mp3_files = input_files
 
     # Sort the MP3 files alphabetically
     mp3_files.sort()
@@ -33,12 +39,17 @@ def join_all_mp3(input_files, output_file):
 def main():
     # Parse the command line arguments
     parser = argparse.ArgumentParser(description="Join multiple MP3 files into a single file")
-    parser.add_argument("input_file", help="Path to directory or list of MP3 files to join")
+    parser.add_argument("input_file", nargs="+", help="Path to directory or list of MP3 files to join")
     parser.add_argument("output_file", help="Path to output file")
     args = parser.parse_args()
 
     # Call the join_all_mp3 function with the input and output files
-    join_all_mp3(args.input_file, args.output_file)
-
+    if len(args.input_file) == 1 and os.path.isdir(args.input_file[0]):
+        input_dir = args.input_file[0]
+        join_all_mp3(input_dir, args.output_file)
+    else:
+        input_files = args.input_file
+        join_all_mp3(input_files, args.output_file)
+        
 if __name__ == "__main__":
     main()
