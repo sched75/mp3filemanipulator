@@ -3,9 +3,7 @@ import os
 import argparse
 import glob
 import tempfile
-import shlex
 import subprocess
-import platform
 
 def join_all_mp3(input_files, output_file, allow_dupes=False):
     mp3_files=[]
@@ -47,11 +45,13 @@ def join_all_mp3(input_files, output_file, allow_dupes=False):
 
 def main():
     # Parse the command line arguments
-    parser = argparse.ArgumentParser(description="Join multiple MP3 files into a single file")
+    parser = argparse.ArgumentParser(description="Join multiple MP3 files into a single file.",add_help=False)
     parser.add_argument("input_file", nargs="+", help="Path to directory or list of MP3 files to join")
     parser.add_argument("output_file", help="Path to output file")
     parser.add_argument("-y", "--yes", action="store_true", help="Force overwrite output file without confirmation")
     parser.add_argument("-d", "--allow_dupes", action="store_true", help="Allow dupes in the list of files aggregated")
+    detailed_help="joinmp3 command joins all MP3 files specified as input inside one file specified as output.\n\rThe input files can be specified one at a time or using wildcards or specifying a directory.\n\rThe -d option will allow presence of the same files several times in the input file list.\n\rThe -y options specified if the output file should be overwritten if existing."
+    parser.add_argument("-h", "--help", nargs=1, help=detailed_help)
     args = parser.parse_args()
 
     # Check if the output file exists
