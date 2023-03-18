@@ -68,6 +68,13 @@ def run_gui():
         input_directory = input_directory_var.get()
         output_file = output_file_var.get()
         bitrate_mode = bitrate_var.get()
+        ffmpeg_path = ffmpeg_path_var.get()
+        avconv_path = avconv_path_var.get()
+
+        if ffmpeg_path:
+            AudioSegment.converter = ffmpeg_path
+        elif avconv_path:
+            AudioSegment.converter = avconv_path
 
         if not input_directory or not output_file:
             return
@@ -85,7 +92,14 @@ def run_gui():
     input_directory_var = tk.StringVar()
     output_file_var = tk.StringVar()
     bitrate_var = tk.StringVar()
+    ffmpeg_path_var = tk.StringVar()
+    avconv_path_var = tk.StringVar()
 
+    tk.Label(root, text="FFmpeg path:").grid(row=3, column=0, sticky="e")
+    tk.Entry(root, textvariable=ffmpeg_path_var).grid(row=3, column=1)
+
+    tk.Label(root, text="avconv path:").grid(row=4, column=0, sticky="e")
+    tk.Entry(root, textvariable=avconv_path_var).grid(row=4, column=1)
     tk.Label(root, text="Input directory:").grid(row=0, column=0, sticky="e")
     tk.Entry(root, textvariable=input_directory_var).grid(row=0, column=1)
     tk.Button(root, text="Browse", command=browse_directory).grid(row=0, column=2)
@@ -112,6 +126,8 @@ def main():
         parser.add_argument("output_file", help="The output audio file.")
         parser.add_argument("--bitrate", choices=["min", "mean", "max"],
                             help="Match the output file's bitrate to the min, mean, or max bitrate among the input files.")
+        parser.add_argument("--ffmpeg-path", help="Specify the path to the FFmpeg executable.")
+        parser.add_argument("--avconv-path", help="Specify the path to the avconv executable.")
 
         args = parser.parse_args()
 
@@ -123,6 +139,10 @@ def main():
             sys.exit(1)
 
         if audio_files:
+            if args.ffmpeg_path:
+                AudioSegment.converter = args.ffmpeg_path
+            elif args.avconv_path:
+                AudioSegment.converter = args.avconv_path
             join_audio_files(audio_files, args.output_file, args.bitrate)
         else:
             print("No audio files found in the specified directory.")
