@@ -2,16 +2,11 @@
 import os
 import argparse
 import glob
-from tqdm import tqdm
+import tempfile
 import subprocess
 
-def joinmp3(file1, file2, output_file):
-    # Use ffmpeg to concatenate the two input MP3 files
-    cmd = f"ffmpeg -i {file1} -i {file2} -filter_complex '[0:0][1:0]concat=n=2:v=0:a=1[out]' -map '[out]' {output_file}"
-    subprocess.run(cmd, shell=True, check=True)
-
 def join_all_mp3(input_files, output_file):
-    # If input_files is a directory path, get all MP3 files in the directory
+    # If input_files is a directory path or a list of filenames
     if isinstance(input_files, str):
         # If the input contains wildcards, use glob to get matching files
         if "*" in input_files or "?" in input_files:
@@ -24,14 +19,19 @@ def join_all_mp3(input_files, output_file):
     # Sort the MP3 files alphabetically
     mp3_files.sort()
 
-    # Join the MP3 files using the joinmp3 function
-    with tqdm(total=len(mp3_files)-1, desc="Joining MP3 files", unit="file") as pbar:
-        for i, file in enumerate(mp3_files):
-            if i == 0:
-                joinmp3(file, file, output_file)
-            else:
-                joinmp3(output_file, file, output_file)
-            pbar.update(1)
+    # Prefix each filename with "file " and wrap it in double quotes
+    mp3_files = [f"file '{os.path.abspath(file)}'" for file in mp3_files]
+
+    # Save the sorted list of filenames to a temporary text file
+    with tempfile.NamedTemporaryFile(mode="w", delete=False) as f:
+        f.write("\n".join(mp3_files))
+
+    # Use ffmpeg to concatenate the MP3 files
+    cmd = f'ffmpeg -f concat -safe 0 -i "{f.name}" -c copy "{output_file}"'
+    subprocess.run(cmd, shell=True, check=True)
+
+    # Delete the temporary text file
+    os.remove(f.name)
 
 
 def main():
@@ -49,6 +49,9 @@ def main():
         if overwrite.lower() != "y":
             print("Aborting.")
             return
+    else:
+        if os.path.exists(args.output_file):
+            os.remove(args.output_file)
 
     # Call the join_all_mp3 function with the input and output files
     if len(args.input_file) == 1 and os.path.isdir(args.input_file[0]):
