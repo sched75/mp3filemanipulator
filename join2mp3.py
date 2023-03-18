@@ -3,18 +3,29 @@ import os
 import argparse
 import glob
 import tempfile
+import shlex
 import subprocess
+import platform
 
-def join_all_mp3(input_files, output_file):
+def join_all_mp3(input_files, output_file, allow_dupes=False):
+    mp3_files=[]
     # If input_files is a directory path or a list of filenames
-    if isinstance(input_files, str):
+    if isinstance(input_files,str) or (isinstance(input_files,list) and all(isinstance(item,str) for item in input_files)):
         # If the input contains wildcards, use glob to get matching files
-        if "*" in input_files or "?" in input_files:
-            mp3_files = sorted(glob.glob(input_files))
-        else:
-            mp3_files = [os.path.join(input_files, f) for f in os.listdir(input_files) if f.endswith(".mp3")]
+        for item in input_files:
+            if "*" in item or "?" in item:
+                mp3_files.extend(sorted(glob.glob(item)))
+            else:
+                if os.path.isdir(item):
+                    mp3_files.extend([os.path.join(item, f) for f in os.listdir(item) if f.endswith(".mp3")])
+                else:
+                    mp3_files.append(item)
     else:
-        mp3_files = input_files
+        mp3_files.append(input_files)
+
+    # Remove dupes
+    if allow_dupes==False:
+        mp3_files = list(set(mp3_files))
 
     # Sort the MP3 files alphabetically
     mp3_files.sort()
@@ -40,6 +51,7 @@ def main():
     parser.add_argument("input_file", nargs="+", help="Path to directory or list of MP3 files to join")
     parser.add_argument("output_file", help="Path to output file")
     parser.add_argument("-y", "--yes", action="store_true", help="Force overwrite output file without confirmation")
+    parser.add_argument("-d", "--allow_dupes", action="store_true", help="Allow dupes in the list of files aggregated")
     args = parser.parse_args()
 
     # Check if the output file exists
@@ -52,14 +64,15 @@ def main():
     else:
         if os.path.exists(args.output_file):
             os.remove(args.output_file)
+    # Verify if dupes are allowed
 
     # Call the join_all_mp3 function with the input and output files
     if len(args.input_file) == 1 and os.path.isdir(args.input_file[0]):
         input_dir = args.input_file[0]
-        join_all_mp3(input_dir, args.output_file)
+        join_all_mp3(input_dir, args.output_file,args.allow_dupes)
     else:
         input_files = args.input_file
-        join_all_mp3(input_files, args.output_file)
+        join_all_mp3(input_files, args.output_file,args.allow_dupes)
         
 if __name__ == "__main__":
     main()
